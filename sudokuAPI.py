@@ -1,10 +1,11 @@
 import json
 from urllib.request import urlopen
+import time
+
 import SudokuStructure
 
-def getSudokuData(difficulty):
-    size = 4    # Size of the sudoku
 
+def getSudokuData(difficulty, size):
     requestURL = f'http://www.cs.utep.edu/cheon/ws/sudoku/new/?size={size}&level={difficulty}'
 
     with urlopen(requestURL) as response:
@@ -33,12 +34,23 @@ if __name__ == '__main__':
         else:
             difficultyString = input('Please enter a valid difficulty level (Easy, Medium, or Hard): ')
 
-    data = getSudokuData(difficulty)
+    size = 9    # Size of the sudoku
+
+    data = getSudokuData(difficulty, size)
     if data['response'] == False:
         print('ERROR: Unable to receive Sudoku puzzle from API')
     else:
-        grid = SudokuStructure.SudokuGrid(data)
+        grid = SudokuStructure.SudokuGrid(data, size)
 
     # Display initial Sudoku SudokuGrid
-    print("Here is the unsolved Sudoku Grid!")
+    print('Here is the unsolved Sudoku Grid!')
     grid.display()
+
+    # Solve Sudoku and display finished Grid
+    print('Solving...')
+    start_time = time.time()
+    grid.solve()
+
+    print('Here is the solved Sudoku Grid!')
+    grid.display()
+    print('It took %s seconds to solve the Sudoku puzzle' % (time.time() - start_time))
