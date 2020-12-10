@@ -34,7 +34,7 @@ if __name__ == '__main__':
         else:
             difficultyString = input('Please enter a valid difficulty level (Easy, Medium, or Hard): ')
 
-    size = 9    # Size of the sudoku
+    size = 4    # Size of the sudoku
 
     data = getSudokuData(difficulty, size)
     if data['response'] == False:
@@ -47,6 +47,7 @@ if __name__ == '__main__':
     grid.display()
 
     # Solve Sudoku and display finished Grid
+    s = input('Press Enter to solve Sudoku')
     print('Solving...')
     start_time = time.time()
     grid.solve()

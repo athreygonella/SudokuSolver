@@ -9,7 +9,7 @@ class SudokuGrid:
         for col in range(0, self.size):
             for row in range(0, self.size):
                 # create cells without values
-                cell = SudokuCell(col, row, None)
+                cell = SudokuCell(col, row, None, self.square_size)
 
                 # add cell to dict with tuple key being the coordinates
                 self.cells[(col, row)] = cell
@@ -30,11 +30,13 @@ class SudokuGrid:
         for row in range(0, self.size):
             print('||', end = ' ')
             for col in range(0, self.size):
-                values = self.cells[(col, row)].values
-                if len(values) != 0:
-                    print(values[0], end =' |')
+                cell = self.cells[(col, row)]
+
+                if cell.isFilled:
+                    print(cell.values[0], end = ' |')
                 else:
                     print(' ', end = ' |')
+
                 if (col + 1) % self.square_size == 0:
                     print('', end = '| ')
                 else:
@@ -55,39 +57,46 @@ class SudokuGrid:
 
     # Returns True if all cells in grid are filled
     def isGridFilled(self):
-        for key in self.cells:
-            if len(self.cells[key].values) != 1:
+        for key, cell in self.cells.items():
+            if cell.isFilled == False:
                 return False
         return True
 
     # Returns list of possible values for a cell
-    def findPossibleValues(self, cell):
+    def findPossibleValuesRowCol(self, cell):
         # Initialize possible values
         possibles = []
         for x in range(1, self.size + 1):
             possibles.append(x)
 
-        # Look across row
+        # Look across row (WORKING)
         for col in range(0, self.size):
             currentCell = self.cells[(col, cell.y)]
             if currentCell is not cell and currentCell.isFilled:
                 if currentCell.values[0] in possibles:
                     possibles.remove(currentCell.values[0])
 
-
-        # Look across column
+        # Look across column (WORKING)
         for row in range(0, self.size):
             currentCell = self.cells[(cell.x, row)]
             if currentCell is not cell and currentCell.isFilled:
-                #print(currentCell.values[0])
                 if currentCell.values[0] in possibles:
                     possibles.remove(currentCell.values[0])
 
-        # Look within square
-        
+        return possibles
 
+    def findPossibleValuesSquare(self, cell, possibles):
+        # Look within square (TODO: NOT WORKING)
+        for key, currentCell in self.cells.items():
+            if currentCell.square_location == cell.square_location:
+                if currentCell is not cell and currentCell.isFilled:
+                    if currentCell.values[0] in possibles:
+                        # print('Removing ' + str(currentCell.values[0]) + ', which is at position ' + str(currentCell.x) + ',' + str(currentCell.y) + ' and square location ' + str(currentCell.square_location))
+
+                        possibles.remove(currentCell.values[0])
 
         return possibles
+
 
     def solve(self):
         # while there are unfilled squares
@@ -95,24 +104,27 @@ class SudokuGrid:
                 # if unfilled
                     # find possible values and update square's values list with
                     # if only one possible value, setValue()
-        a = self.cells
 
-        x = self.isGridFilled()
+        while not self.isGridFilled():
+            for key, cell in self.cells.items():
+                if not cell.isFilled:
+                    possible_values = self.findPossibleValuesRowCol(cell)
+                    # print(str(cell.x) + ',' + str(cell.y) + ': ' + str(possible_values) + '----->' + str(self.findPossibleValuesSquare(cell, possible_values)))
 
-        if not self.isGridFilled():
-            for key in self.cells:
-                cell = self.cells[key]
-                if len(cell.values) != 1:
-                    possible_values = self.findPossibleValues(cell)
                     if len(possible_values) == 1:
                         cell.setValue(possible_values[0])
+                        break
                     else:
                         cell.updatePossibleValues(possible_values)
+
+            self.display()
+            print()
+            print()
 
 
 
 class SudokuCell:
-    def __init__(self, x, y, value):
+    def __init__(self, x, y, value, square_size):
         self.x = x
         self.y = y
 
@@ -123,6 +135,13 @@ class SudokuCell:
             self.values.append(value)
         else:
             self.isFilled = False
+
+        self.identifySquareLocation(square_size)
+
+    def identifySquareLocation(self, square_size):
+        square_column = math.floor(self.x / square_size)
+        square_row = math.floor(self.y / square_size)
+        self.square_location = (square_column, square_row)
 
     def setValue(self, value):
         if self.isFilled == False:
